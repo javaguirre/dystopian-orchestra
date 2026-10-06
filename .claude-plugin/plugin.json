@@ -1,0 +1,6 @@
+{
+  "name": "orquesta-minion",
+  "version": "0.1.0",
+  "description": "Una orquesta de minions compone una nueva obra mientras Claude trabaja",
+  "types": "./types/index.d.ts"
+}
