@@ -7,8 +7,10 @@ export type Orchestra = {
   ovations: number
   measures: number
   score: number[]
+  fullScore: number[]
   isPlaying: boolean
   isPerforming: boolean
+  salt: number
 }
 
 declare module 'claude-code' {

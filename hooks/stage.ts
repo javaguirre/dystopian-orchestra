@@ -17,7 +17,7 @@ const isMoving = (o: Orchestra) => o.isPlaying || o.isPerforming
 const section = (positions: [number, number][], role: Role, o: Orchestra, spot: [number, number]) =>
   positions.length === 0
     ? emptySpot(...spot)
-    : positions.map(([x, y], i) => character(x, y, role, i, isMoving(o), o.ovations)).join('')
+    : positions.map(([x, y], i) => character(x, y, role, i, isMoving(o), o.salt)).join('')
 
 const arc = (count: number, centerX: number, baseY: number, spread: number, depth: number): [number, number][] =>
   Array.from({ length: count }, (_, i) => {

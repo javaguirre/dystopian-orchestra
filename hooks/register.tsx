@@ -3,11 +3,14 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Orchestra } from '../types'
 
+import { archiveFiles } from './archive.ts'
+import { synthesize, toWav } from './music.ts'
 import { SCORE_RATIO, STAGE_RATIO, score, stage } from './stage.ts'
 
 const PANE = 'orquesta'
 const STORE_KEY = 'game'
 const WAV_PATH = '/tmp/orquesta-minion.wav'
+const ARCHIVE_DIR = '$HOME/Tools/orchestra/obras'
 
 const EMPTY: Orchestra = {
   notes: 0,
@@ -18,8 +21,10 @@ const EMPTY: Orchestra = {
   ovations: 0,
   measures: 0,
   score: [],
+  fullScore: [],
   isPlaying: false,
   isPerforming: false,
+  salt: 0,
 }
 
 const game = atom({ plugin: 'orquesta-minion', key: 'game' } as const, EMPTY)
@@ -54,76 +59,31 @@ const compose = (o: Orchestra): Orchestra => {
     measure.push(step)
   }
 
-  return { ...o, measures: o.measures + 1, score: [...o.score, ...measure].slice(-32) }
+  return {
+    ...o,
+    measures: o.measures + 1,
+    score: [...o.score, ...measure].slice(-32),
+    fullScore: [...o.fullScore, ...measure].slice(-512),
+  }
 }
+
+const newSalt = () => 1 + Math.floor(Math.random() * 2 ** 31)
 
 const change = async ($: EngineInterface, fn: (o: Orchestra) => Orchestra) => {
   await update($, game, fn)
   await $.store.set(STORE_KEY, await read($, game))
 }
 
-const RATE = 11025
-const BEAT_SECONDS = 0.25
-const SCALE = [0, 2, 4, 7, 9, 12, 14, 16]
-const TAU = Math.PI * 2
-const hz = (semitone: number) => 261.63 * 2 ** (semitone / 12)
+const archive = async ($: EngineInterface, o: Orchestra) => {
+  for (const { file, command, content } of archiveFiles(o, new Date(await $.clock.now()))) {
+    const { exitCode, stderr } = await $.process.run(
+      ['/bin/sh', '-c', `mkdir -p "${ARCHIVE_DIR}" && ${command} > "${ARCHIVE_DIR}/$1"`, 'sh', file],
+      { stdin: content, timeoutMs: 60000 },
+    )
+    if (exitCode !== 0) return stderr.slice(0, 120)
+  }
 
-const synthesize = (o: Orchestra): Float32Array => {
-  const notes = o.score.slice(-16)
-  const beatLength = Math.floor(RATE * BEAT_SECONDS)
-  const mix = new Float32Array(beatLength * notes.length)
-
-  notes.forEach((step, beat) => {
-    const root = SCALE[notes[beat - (beat % 4)]]
-    for (let i = 0; i < beatLength; i++) {
-      const t = i / RATE
-      const tBar = ((beat % 4) * beatLength + i) / RATE
-      const envelope = Math.exp(-t * 6)
-      let sample = 0.35 * Math.sin(TAU * hz(SCALE[step]) * t) * envelope
-
-      if (o.violins > 0) {
-        sample += Math.min(0.25, 0.05 * o.violins) * Math.sin(TAU * hz(SCALE[Math.max(0, step - 2)]) * t) * envelope
-      }
-      if (o.conductors > 0) {
-        sample += 0.2 * Math.sin(TAU * hz(root - 12) * tBar) * Math.exp(-tBar * 1.5)
-      }
-      if (o.drums > 0 && beat % 2 === 0) {
-        sample += 0.5 * Math.sin(TAU * (50 + 70 * Math.exp(-t * 30)) * t) * Math.exp(-t * 12)
-      }
-      if (o.drums > 0 && beat % 2 === 1) {
-        sample += 0.15 * (Math.random() * 2 - 1) * Math.exp(-t * 60)
-      }
-      mix[beat * beatLength + i] = sample
-    }
-  })
-
-  return mix
-}
-
-const toWav = (samples: Float32Array): Uint8Array => {
-  const bytes = new Uint8Array(44 + samples.length)
-  const view = new DataView(bytes.buffer)
-  const text = (offset: number, value: string) =>
-    [...value].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)))
-
-  text(0, 'RIFF')
-  view.setUint32(4, 36 + samples.length, true)
-  text(8, 'WAVE')
-  text(12, 'fmt ')
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
-  view.setUint32(24, RATE, true)
-  view.setUint32(28, RATE, true)
-  view.setUint16(32, 1, true)
-  view.setUint16(34, 8, true)
-  text(36, 'data')
-  view.setUint32(40, samples.length, true)
-  samples.forEach((s, i) => {
-    bytes[44 + i] = Math.round(128 + 127 * Math.max(-1, Math.min(1, s)))
-  })
-
-  return bytes
+  return undefined
 }
 
 const play = async ($: EngineInterface) => {
@@ -159,6 +119,7 @@ export const register: Register = on => {
     if (saved) {
       await update($, game, () => ({ ...EMPTY, ...saved, isPlaying: false, isPerforming: false }))
     }
+    await change($, x => ({ ...x, salt: x.salt || newSalt(), fullScore: x.fullScore.length > 0 ? x.fullScore : x.score }))
     await $.command.register({ name: 'orquesta', description: 'Abre la Orquesta del Yermo' })
     void $.ui.open({ id: PANE, title: 'Orquesta del Yermo — Nueva obra' })
     $.clock.every(1000, () => {
@@ -213,8 +174,13 @@ export const register: Register = on => {
       })
 
     const premiere = async () => {
-      await change($, x => ({ ...EMPTY, ovations: x.ovations + 1 }))
-      $.ui.toast(`👏 ¡Ovación en pie! ✦ ${o.ovations + 1}`)
+      const failure = await archive($, await read($, game))
+      if (failure !== undefined) {
+        $.ui.toast(`No se pudo guardar la obra: ${failure}`)
+        return
+      }
+      await change($, x => ({ ...EMPTY, ovations: x.ovations + 1, salt: newSalt() }))
+      $.ui.toast(`👏 ¡Ovación en pie! ✦ ${o.ovations + 1} · obra guardada en ~/Tools/orchestra/obras`)
     }
 
     const drawing = (source: string, alt: string, ratio: number) => {
