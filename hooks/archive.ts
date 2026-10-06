@@ -3,6 +3,7 @@ import type { Orchestra } from '../types'
 import { traitsOf } from './cast.ts'
 import { describeKey, keyOf, noteName, synthesize, toWav } from './music.ts'
 import type { Key } from './music.ts'
+import { stage } from './stage.ts'
 
 const MAX_ARCHIVED_NOTES = 128
 
@@ -78,15 +79,17 @@ const scoreRows = (score: number[], key: Key) =>
     return `| ${measure + 1} | ${notes.join(' · ')} |`
   })
 
-const markdown = (o: Orchestra, key: Key, when: { day: string; time: string }, audio: string) =>
+const markdown = (o: Orchestra, key: Key, when: { day: string; time: string }, name: string) =>
   [
     `# Sinfonía del Yermo nº ${o.ovations + 1}`,
+    '',
+    `![La banda que la creó](${name}.svg)`,
     '',
     `- **Estreno:** ${when.day} ${when.time}`,
     `- **Compases:** ${o.measures}`,
     `- **Notas ganadas:** ${Math.round(o.earned)}`,
     `- **Tonalidad:** ${describeKey(key)}`,
-    `- **Audio:** [${audio}](${audio})`,
+    `- **Audio:** [${name}.wav](${name}.wav)`,
     '',
     '## Plantilla',
     '',
@@ -102,6 +105,9 @@ const markdown = (o: Orchestra, key: Key, when: { day: string; time: string }, a
     '',
   ].join('\n')
 
+const bandPortrait = (o: Orchestra) =>
+  stage({ ...o, isPlaying: false, isPerforming: false }).replace('width="100%" height="100%"', 'width="1040" height="720"')
+
 export const archiveFiles = (o: Orchestra, now: Date) => {
   const when = stamp(now)
   const key = keyOf(o.salt)
@@ -110,6 +116,7 @@ export const archiveFiles = (o: Orchestra, now: Date) => {
 
   return [
     { file: `${name}.wav`, command: 'base64 -d', content: audio.toBase64() },
-    { file: `${name}.md`, command: 'cat', content: markdown(o, key, when, `${name}.wav`) },
+    { file: `${name}.svg`, command: 'cat', content: bandPortrait(o) },
+    { file: `${name}.md`, command: 'cat', content: markdown(o, key, when, name) },
   ]
 }
