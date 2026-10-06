@@ -17,9 +17,9 @@ const SCALES = [
 
 const ROOTS = [110, 116.54, 123.47, 130.81, 146.83]
 
-const SCALE_NAMES = ['pentatónica menor', 'frigia', 'menor armónica', 'tonos enteros', 'blues', 'frigia dominante']
+const SCALE_NAMES = ['minor pentatonic', 'Phrygian', 'harmonic minor', 'whole tone', 'blues', 'Phrygian dominant']
 const ROOT_SEMITONES = [9, 10, 11, 0, 2]
-const NOTE_NAMES = ['Do', 'Do#', 'Re', 'Re#', 'Mi', 'Fa', 'Fa#', 'Sol', 'Sol#', 'La', 'La#', 'Si']
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 export type Key = { scale: number; root: number; beat: number }
 
@@ -33,7 +33,7 @@ export const noteName = (key: Key, degree: number) =>
   NOTE_NAMES[(ROOT_SEMITONES[key.root] + SCALES[key.scale][degree]) % 12]
 
 export const describeKey = (key: Key) =>
-  `${SCALE_NAMES[key.scale]} en ${NOTE_NAMES[ROOT_SEMITONES[key.root]]} · ${Math.round(30 / key.beat)} bpm`
+  `${NOTE_NAMES[ROOT_SEMITONES[key.root]]} ${SCALE_NAMES[key.scale]} · ${Math.round(30 / key.beat)} bpm`
 
 let next = Math.random
 

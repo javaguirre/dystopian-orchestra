@@ -84,7 +84,7 @@ const floatingNotes = (isPlaying: boolean) => {
 const sign = (o: Orchestra) => {
   return (
     `<g><rect x="170" y="22" width="180" height="26" fill="#0b0d10" stroke="#ff3d8b" stroke-width="2"/>` +
-    `<text x="260" y="40" text-anchor="middle" font-family="Courier New, monospace" font-weight="bold" font-size="13" letter-spacing="2" fill="#ff3d8b">SINFONÍA Nº ${o.ovations + 1}</text></g>` +
+    `<text x="260" y="40" text-anchor="middle" font-family="Courier New, monospace" font-weight="bold" font-size="13" letter-spacing="2" fill="#ff3d8b">SYMPHONY Nº ${o.ovations + 1}</text></g>` +
     '<rect x="196" y="48" width="2" height="16" fill="#2a2d31"/><rect x="322" y="48" width="2" height="16" fill="#2a2d31"/>'
   )
 }
@@ -171,14 +171,14 @@ export const score = (o: Orchestra, progress: number) => {
   }).join('')
   const empty =
     notes.length === 0
-      ? `<text x="${W / 2}" y="82" text-anchor="middle" font-family="Courier New, monospace" font-size="11" fill="${PHOSPHOR}" opacity="0.7">&gt; ESPERANDO SEÑAL… CADA HERRAMIENTA ESCRIBE UN COMPÁS_</text>`
+      ? `<text x="${W / 2}" y="82" text-anchor="middle" font-family="Courier New, monospace" font-size="11" fill="${PHOSPHOR}" opacity="0.7">&gt; AWAITING SIGNAL… EVERY TOOL CALL WRITES A MEASURE_</text>`
       : ''
   const scanlines = Array.from({ length: 41 }, (_, i) => `<rect x="4" y="${4 + i * 4}" width="${W - 8}" height="1" fill="#000" opacity="0.25"/>`).join('')
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} 170" width="100%" height="100%" overflow="hidden" style="display:block;background:#060a06" shape-rendering="crispEdges">
 <rect x="0" y="0" width="${W}" height="170" fill="#2a2d31"/><rect x="4" y="4" width="${W - 8}" height="162" fill="#060a06"/>
-<text x="28" y="32" font-family="Courier New, monospace" font-weight="bold" font-size="14" fill="${PHOSPHOR}">// PARTITURA · SINFONÍA DEL YERMO Nº ${o.ovations + 1}</text>
-<text x="${W - 28}" y="32" text-anchor="end" font-family="Courier New, monospace" font-size="11" fill="${PHOSPHOR}" opacity="0.7">${o.measures} COMPASES</text>
+<text x="28" y="32" font-family="Courier New, monospace" font-weight="bold" font-size="14" fill="${PHOSPHOR}">// SCORE · WASTELAND SYMPHONY Nº ${o.ovations + 1}</text>
+<text x="${W - 28}" y="32" text-anchor="end" font-family="Courier New, monospace" font-size="11" fill="${PHOSPHOR}" opacity="0.7">${o.measures} MEASURES</text>
 ${staffLines}<text x="34" y="98" font-family="Georgia, serif" font-size="46" fill="${PHOSPHOR}" opacity="0.8">𝄞</text>
 ${bars}${glyphs}${empty}
 ${segments}

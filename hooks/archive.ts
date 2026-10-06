@@ -8,49 +8,49 @@ import { stage } from './stage.ts'
 const MAX_ARCHIVED_NOTES = 128
 
 const LABELS: Record<string, string> = {
-  gasMask: 'máscara de gas',
-  goggles: 'gafas y bufanda',
+  gasMask: 'gas mask',
+  goggles: 'goggles and scarf',
   visor: 'visor',
-  welder: 'careta de soldador',
-  bandaged: 'cara vendada',
-  punk: 'cresta punk',
+  welder: 'welding mask',
+  bandaged: 'bandaged face',
+  punk: 'punk mohawk',
   robot: 'robot',
-  plague: 'médico de la peste',
-  cyclops: 'cíclope',
-  helmet: 'casco militar',
-  skull: 'calavera',
-  coat: 'abrigo',
-  rags: 'harapos',
-  hazmat: 'traje químico',
-  armor: 'armadura',
-  jumpsuit: 'mono de trabajo',
+  plague: 'plague doctor',
+  cyclops: 'cyclops',
+  helmet: 'army helmet',
+  skull: 'skull',
+  coat: 'coat',
+  rags: 'rags',
+  hazmat: 'hazmat suit',
+  armor: 'armor',
+  jumpsuit: 'jumpsuit',
   poncho: 'poncho',
-  antenna: 'antena',
-  headphones: 'cascos',
-  backpack: 'mochila',
-  spikes: 'hombreras con pinchos',
-  chain: 'cadena',
-  tank: 'bombona',
-  violin: 'violín',
-  cello: 'violonchelo',
-  trumpet: 'trompeta',
-  accordion: 'acordeón',
-  guitar: 'guitarra de chatarra',
-  flute: 'flauta',
-  sax: 'saxofón',
-  theremin: 'theremín',
-  saw: 'sierra musical',
+  antenna: 'antenna',
+  headphones: 'headphones',
+  backpack: 'backpack',
+  spikes: 'spiked shoulders',
+  chain: 'chain',
+  tank: 'gas tank',
+  violin: 'violin',
+  cello: 'cello',
+  trumpet: 'trumpet',
+  accordion: 'accordion',
+  guitar: 'scrap guitar',
+  flute: 'flute',
+  sax: 'saxophone',
+  theremin: 'theremin',
+  saw: 'musical saw',
   keytar: 'keytar',
-  barrel: 'bidón',
-  lids: 'tapas de cubo',
-  buckets: 'cubos',
-  pipes: 'xilófono de tuberías',
-  tire: 'neumático',
-  gong: 'gong de alcantarilla',
-  cans: 'latas',
+  barrel: 'oil barrel',
+  lids: 'bin lids',
+  buckets: 'buckets',
+  pipes: 'pipe xylophone',
+  tire: 'tyre',
+  gong: 'manhole gong',
+  cans: 'cans',
 }
 
-const RARITY = { common: 'común', rare: 'raro', legendary: '**legendario**' }
+const RARITY = { common: 'common', rare: 'rare', legendary: '**legendary**' }
 
 const label = (name: string) => LABELS[name] ?? name
 
@@ -68,9 +68,9 @@ const rosterRows = (o: Orchestra) => {
       const look = [traits.head, traits.body, traits.accessory].filter(part => part !== 'none').map(label).join(' · ')
       return `| ${name} | ${look} | ${label(traits.instrument)} | ${RARITY[traits.rarity]} |`
     })
-  const conductor = o.conductors > 0 ? [`| Dirección | director cíborg ×${o.conductors} | batuta de neón | común |`] : []
+  const conductor = o.conductors > 0 ? [`| Conducting | cyborg conductor ×${o.conductors} | neon baton | common |`] : []
 
-  return [...section('melodic', o.violins, 'Melódica'), ...section('percussion', o.drums, 'Percusión'), ...conductor]
+  return [...section('melodic', o.violins, 'Melodic'), ...section('percussion', o.drums, 'Percussion'), ...conductor]
 }
 
 const scoreRows = (score: number[], key: Key) =>
@@ -81,25 +81,25 @@ const scoreRows = (score: number[], key: Key) =>
 
 const markdown = (o: Orchestra, key: Key, when: { day: string; time: string }, name: string) =>
   [
-    `# Sinfonía del Yermo nº ${o.ovations + 1}`,
+    `# Wasteland Symphony Nº ${o.ovations + 1}`,
     '',
-    `![La banda que la creó](${name}.svg)`,
+    `![The band that played it](${name}.svg)`,
     '',
-    `- **Estreno:** ${when.day} ${when.time}`,
-    `- **Compases:** ${o.measures}`,
-    `- **Notas ganadas:** ${Math.round(o.earned)}`,
-    `- **Tonalidad:** ${describeKey(key)}`,
+    `- **Premiered:** ${when.day} ${when.time}`,
+    `- **Measures:** ${o.measures}`,
+    `- **Notes earned:** ${Math.round(o.earned)}`,
+    `- **Key:** ${describeKey(key)}`,
     `- **Audio:** [${name}.wav](${name}.wav)`,
     '',
-    '## Plantilla',
+    '## Band',
     '',
-    '| Sección | Músico | Instrumento | Rareza |',
+    '| Section | Musician | Instrument | Rarity |',
     '| --- | --- | --- | --- |',
     ...rosterRows(o),
     '',
-    '## Partitura',
+    '## Score',
     '',
-    '| Compás | Notas |',
+    '| Measure | Notes |',
     '| --- | --- |',
     ...scoreRows(o.fullScore, key),
     '',
@@ -111,7 +111,7 @@ const bandPortrait = (o: Orchestra) =>
 export const archiveFiles = (o: Orchestra, now: Date) => {
   const when = stamp(now)
   const key = keyOf(o.salt)
-  const name = `sinfonia-del-yermo-n${o.ovations + 1}-${when.day}`
+  const name = `wasteland-symphony-n${o.ovations + 1}-${when.day}`
   const audio = toWav(synthesize({ ...o, score: o.fullScore }, { limit: MAX_ARCHIVED_NOTES }))
 
   return [

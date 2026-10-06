@@ -8,15 +8,13 @@ Every prompt you send makes the orchestra rehearse, every tool Claude calls writ
 
 ![The score](docs/score.svg)
 
-> The in-game text is in Spanish.
-
 ## How it plays
 
 | When | Notes earned | Boosted by |
 | --- | --- | --- |
-| Every second Claude is thinking | 0.2 + 0.5 per melodic musician | Músico del yermo |
-| Every tool call (it also composes a measure) | 1 + 2 per percussionist | Percusionista de chatarra |
-| Every finished turn | output tokens ÷ 40 × (1 + 0.25 per conductor) | Director cíborg |
+| Every second Claude is thinking | 0.2 + 0.5 per melodic musician | Wasteland musician |
+| Every tool call (it also composes a measure) | 1 + 2 per percussionist | Scrap percussionist |
+| Every finished turn | output tokens ÷ 40 × (1 + 0.25 per conductor) | Cyborg conductor |
 
 - Each hire costs 15% more than the last one in its section.
 - The symphony is ready to premiere once you have earned 1500 × 2^premieres notes.
@@ -33,16 +31,16 @@ Each orchestra has a hidden salt. Every musician's look and sound is derived fro
 
 ## The music
 
-Press **▶ Escuchar la obra** to hear the latest 16 notes. The mod synthesises a WAV in the plugin itself and plays it with `afplay`.
+Press **▶ Listen to the piece** to hear the latest 16 notes. The mod synthesises a WAV in the plugin itself and plays it with `afplay`.
 
 - The scale, root and tempo come from the orchestra's salt, so a piece sounds the same until new measures are written or new musicians join.
 - Each instrument has its own voice, and the conductor adds a drone and more glitch: stutters, reversed slices, bit-crushing, dropouts, ring modulation, radio crackle and tape stops.
 
 ## The archive
 
-Premiering a symphony writes three files to `~/Tools/orchestra/obras/`:
+Premiering a symphony writes three files to `~/Tools/orchestra/symphonies/`:
 
-- `sinfonia-del-yermo-n<N>-<date>.md`: date, key, the full roster and the complete score, measure by measure.
+- `wasteland-symphony-n<N>-<date>.md`: date, key, the full roster and the complete score, measure by measure.
 - `.wav`: the whole piece (up to its last 128 notes).
 - `.svg`: a still portrait of the band that played it, embedded in the markdown.
 
@@ -55,7 +53,7 @@ git clone git@github.com:javaguirre/dystopian-orchestra.git
 claude --plugin-dir ./dystopian-orchestra
 ```
 
-Open the pane with `/orquesta`.
+Open the pane with `/orchestra`.
 
 The mod runs a few host commands: `afplay` and `base64` to play music, and `mkdir`, `cat` and `base64` to write the archive. Audio playback is macOS only.
 

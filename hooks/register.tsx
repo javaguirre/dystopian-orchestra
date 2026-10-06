@@ -7,10 +7,10 @@ import { archiveFiles } from './archive.ts'
 import { synthesize, toWav } from './music.ts'
 import { SCORE_RATIO, STAGE_RATIO, score, stage } from './stage.ts'
 
-const PANE = 'orquesta'
+const PANE = 'orchestra'
 const STORE_KEY = 'game'
 const WAV_PATH = '/tmp/dystopian-orchestra.wav'
-const ARCHIVE_DIR = '$HOME/Tools/orchestra/obras'
+const ARCHIVE_DIR = '$HOME/Tools/orchestra/symphonies'
 
 const EMPTY: Orchestra = {
   notes: 0,
@@ -32,9 +32,9 @@ const game = atom({ plugin: 'dystopian-orchestra', key: 'game' } as const, EMPTY
 type SectionId = 'violins' | 'drums' | 'conductors'
 
 const SECTIONS: { id: SectionId; hotkey: string; name: string; base: number; effect: string }[] = [
-  { id: 'violins', hotkey: '1', name: 'Músico del yermo', base: 15, effect: '+0.5 notas/s mientras el agente piensa' },
-  { id: 'drums', hotkey: '2', name: 'Percusionista de chatarra', base: 100, effect: '+2 notas por herramienta usada' },
-  { id: 'conductors', hotkey: '3', name: 'Director cíborg', base: 500, effect: '+25% notas por tokens generados' },
+  { id: 'violins', hotkey: '1', name: 'Wasteland musician', base: 15, effect: '+0.5 notes/s while the agent thinks' },
+  { id: 'drums', hotkey: '2', name: 'Scrap percussionist', base: 100, effect: '+2 notes per tool call' },
+  { id: 'conductors', hotkey: '3', name: 'Cyborg conductor', base: 500, effect: '+25% notes from generated tokens' },
 ]
 
 const MOVEMENTS = ['I. Allegro', 'II. Adagio', 'III. Scherzo', 'IV. Finale']
@@ -89,10 +89,10 @@ const archive = async ($: EngineInterface, o: Orchestra) => {
 const play = async ($: EngineInterface) => {
   const o = await read($, game)
   if (o.score.length === 0) {
-    $.ui.toast('Aún no hay obra: lanza un prompt para que la orquesta componga')
+    $.ui.toast('No piece yet: send a prompt so the orchestra can compose')
     return
   }
-  $.ui.toast('📻 La orquesta toca su obra entre las ruinas')
+  $.ui.toast('📻 The orchestra plays its piece among the ruins')
   await update($, game, x => ({ ...x, isPerforming: true }))
   const { exitCode, stderr } = await $.process
     .run(['/bin/sh', '-c', 'base64 -d > "$1" && afplay "$1"', 'sh', WAV_PATH], {
@@ -101,7 +101,7 @@ const play = async ($: EngineInterface) => {
     })
     .finally(() => update($, game, x => ({ ...x, isPerforming: false })))
   if (exitCode !== 0) {
-    $.ui.toast(`La orquesta desafina: ${stderr.slice(0, 80)}`)
+    $.ui.toast(`The orchestra is out of tune: ${stderr.slice(0, 80)}`)
   }
 }
 
@@ -120,8 +120,8 @@ export const register: Register = on => {
       await update($, game, () => ({ ...EMPTY, ...saved, isPlaying: false, isPerforming: false }))
     }
     await change($, x => ({ ...x, salt: x.salt || newSalt(), fullScore: x.fullScore.length > 0 ? x.fullScore : x.score }))
-    await $.command.register({ name: 'orquesta', description: 'Abre la Orquesta del Yermo' })
-    void $.ui.open({ id: PANE, title: 'Orquesta del Yermo — Nueva obra' })
+    await $.command.register({ name: 'orchestra', description: 'Open the Dystopian Orchestra' })
+    void $.ui.open({ id: PANE, title: 'Dystopian Orchestra — New symphony' })
     $.clock.every(1000, () => {
       void (async () => {
         const o = await read($, game)
@@ -132,10 +132,10 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'orquesta' }, async $ => {
-    await $.ui.open({ id: PANE, title: 'Orquesta del Yermo — Nueva obra' })
+  on('command.run', { command: 'orchestra' }, async $ => {
+    await $.ui.open({ id: PANE, title: 'Dystopian Orchestra — New symphony' })
 
-    return { text: 'La orquesta ocupa las ruinas.' }
+    return { text: 'The orchestra takes over the ruins.' }
   })
 
   on('turn.start', async ($, e, next) => {
@@ -165,7 +165,7 @@ export const register: Register = on => {
     const o = await read($, game)
     const pct = progress(o)
     const isReady = pct >= 1
-    const movement = isReady ? '¡Lista para el estreno!' : MOVEMENTS[Math.floor(pct * 4)]
+    const movement = isReady ? 'Ready to premiere!' : MOVEMENTS[Math.floor(pct * 4)]
 
     const buy = (id: SectionId, base: number) =>
       change($, x => {
@@ -176,11 +176,11 @@ export const register: Register = on => {
     const premiere = async () => {
       const failure = await archive($, await read($, game))
       if (failure !== undefined) {
-        $.ui.toast(`No se pudo guardar la obra: ${failure}`)
+        $.ui.toast(`Could not save the symphony: ${failure}`)
         return
       }
       await change($, x => ({ ...EMPTY, ovations: x.ovations + 1, salt: newSalt() }))
-      $.ui.toast(`👏 ¡Ovación en pie! ✦ ${o.ovations + 1} · obra guardada en ~/Tools/orchestra/obras`)
+      $.ui.toast(`👏 Standing ovation! ✦ ${o.ovations + 1} · symphony saved to ~/Tools/orchestra/symphonies`)
     }
 
     const drawing = (source: string, alt: string, ratio: number) => {
@@ -192,20 +192,20 @@ export const register: Register = on => {
 
     return (
       <Box flexDirection="column" gap={1}>
-        <Text>{o.isPlaying ? '📻 La orquesta ensaya entre las ruinas mientras Claude piensa…' : '🌫️ Silencio en el yermo: lanza un prompt'}</Text>
+        <Text>{o.isPlaying ? '📻 The orchestra rehearses among the ruins while Claude thinks…' : '🌫️ Silence in the wasteland: send a prompt'}</Text>
         <Text bold>
-          ♪ {format(o.notes)} notas · ✦ {o.ovations} ovaciones
+          ♪ {format(o.notes)} notes · ✦ {o.ovations} ovations
         </Text>
-        {drawing(stage(o), 'Escenario en ruinas con la orquesta', STAGE_RATIO)}
+        {drawing(stage(o), 'Ruined stage with the orchestra', STAGE_RATIO)}
         <Box flexDirection="column">
-          <Text bold>Secciones</Text>
+          <Text bold>Sections</Text>
           {SECTIONS.map(section => (
             <Box flexDirection="column">
               <Box flexDirection="row" gap={1}>
                 <Button
                   key={section.id}
                   hotkey={section.hotkey}
-                  label={`Fichar (${cost(section.base, o[section.id])})`}
+                  label={`Hire (${cost(section.base, o[section.id])})`}
                   dimColor={o.notes < cost(section.base, o[section.id])}
                   onPress={() => buy(section.id, section.base)}
                 />
@@ -218,17 +218,17 @@ export const register: Register = on => {
           ))}
         </Box>
         <Box flexDirection="column">
-          <Text bold>La nueva obra</Text>
+          <Text bold>The new symphony</Text>
           <Text>
-            {movement} · {Math.floor(pct * 100)}% · {o.measures} compases
+            {movement} · {Math.floor(pct * 100)}% · {o.measures} measures
           </Text>
           <Box flexDirection="row" gap={1}>
-            <Button key="play" hotkey="p" label="▶ Escuchar la obra" onPress={() => void play($)} />
-            {isReady && <Button key="premiere" variant="primary" label="Estrenar la sinfonía (+1 ✦)" onPress={premiere} />}
+            <Button key="play" hotkey="p" label="▶ Listen to the piece" onPress={() => void play($)} />
+            {isReady && <Button key="premiere" variant="primary" label="Premiere the symphony (+1 ✦)" onPress={premiere} />}
           </Box>
-          <Text dimColor>El estreno reinicia la orquesta; cada ✦ da +10% de notas para siempre.</Text>
+          <Text dimColor>Premiering resets the orchestra; each ✦ gives +10% notes forever.</Text>
         </Box>
-        {drawing(score(o, pct), 'Partitura de la obra en curso', SCORE_RATIO)}
+        {drawing(score(o, pct), 'Score of the symphony in progress', SCORE_RATIO)}
       </Box>
     )
   })
