@@ -189,7 +189,7 @@ const hash = (...parts: number[]) => {
   return h >>> 0
 }
 
-const generator = (seed: number) => {
+export const generator = (seed: number) => {
   let state = seed
   return () => {
     state = (state + 0x6d2b79f5) | 0

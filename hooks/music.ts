@@ -1,6 +1,6 @@
 import type { Orchestra } from '../types'
 
-import { traitsOf } from './cast.ts'
+import { generator, traitsOf } from './cast.ts'
 import type { Traits } from './cast.ts'
 
 const RATE = 22050
@@ -35,10 +35,12 @@ export const noteName = (key: Key, degree: number) =>
 export const describeKey = (key: Key) =>
   `${SCALE_NAMES[key.scale]} en ${NOTE_NAMES[ROOT_SEMITONES[key.root]]} · ${Math.round(30 / key.beat)} bpm`
 
-const random = (min: number, max: number) => min + Math.random() * (max - min)
-const chance = (probability: number) => Math.random() < probability
-const choose = <T>(list: T[]) => list[Math.floor(Math.random() * list.length)]
-const noise = () => Math.random() * 2 - 1
+let next = Math.random
+
+const random = (min: number, max: number) => min + next() * (max - min)
+const chance = (probability: number) => next() < probability
+const choose = <T>(list: T[]) => list[Math.floor(next() * list.length)]
+const noise = () => next() * 2 - 1
 const clampDegree = (degree: number) => Math.max(0, Math.min(7, degree))
 
 type Note = { start: number; length: number; degree: number }
@@ -61,7 +63,7 @@ const compose = (score: number[], limit: number, key?: Key): Piece => {
   let time = 0
 
   for (const degree of motif(score, limit)) {
-    const roll = Math.random()
+    const roll = next()
     if (roll < 0.1) {
       time += beat
       continue
@@ -254,7 +256,7 @@ const glitch = (mix: Float32Array, piece: Piece, amount: number) => {
   const segment = Math.floor((piece.beat / 2) * RATE)
 
   for (let start = 0; start + segment < mix.length; start += segment) {
-    const roll = Math.random() / amount
+    const roll = next() / amount
     if (roll < 0.12) {
       const slice = mix.slice(start, start + Math.floor(segment / 4))
       for (let i = 0; i < segment; i++) mix[start + i] = slice[i % slice.length]
@@ -303,8 +305,9 @@ const master = (mix: Float32Array, drive: number) => {
   for (let i = 0; i < mix.length; i++) mix[i] *= gain
 }
 
-export const synthesize = (o: Orchestra, options: { limit?: number; key?: Key } = {}): Float32Array => {
-  const piece = compose(o.score, options.limit ?? 16, options.key)
+export const synthesize = (o: Orchestra, options: { limit?: number } = {}): Float32Array => {
+  next = generator(o.salt)
+  const piece = compose(o.score, options.limit ?? 16, keyOf(o.salt))
   const length = Math.floor((piece.seconds + 0.6) * RATE)
   const mix = new Float32Array(length)
   const melodic = Math.min(o.violins, 8)

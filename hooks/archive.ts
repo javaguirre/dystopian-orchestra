@@ -106,7 +106,7 @@ export const archiveFiles = (o: Orchestra, now: Date) => {
   const when = stamp(now)
   const key = keyOf(o.salt)
   const name = `sinfonia-del-yermo-n${o.ovations + 1}-${when.day}`
-  const audio = toWav(synthesize({ ...o, score: o.fullScore }, { limit: MAX_ARCHIVED_NOTES, key }))
+  const audio = toWav(synthesize({ ...o, score: o.fullScore }, { limit: MAX_ARCHIVED_NOTES }))
 
   return [
     { file: `${name}.wav`, command: 'base64 -d', content: audio.toBase64() },
