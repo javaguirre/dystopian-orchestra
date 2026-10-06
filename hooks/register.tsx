@@ -9,7 +9,7 @@ import { SCORE_RATIO, STAGE_RATIO, score, stage } from './stage.ts'
 
 const PANE = 'orquesta'
 const STORE_KEY = 'game'
-const WAV_PATH = '/tmp/orquesta-minion.wav'
+const WAV_PATH = '/tmp/dystopian-orchestra.wav'
 const ARCHIVE_DIR = '$HOME/Tools/orchestra/obras'
 
 const EMPTY: Orchestra = {
@@ -27,7 +27,7 @@ const EMPTY: Orchestra = {
   salt: 0,
 }
 
-const game = atom({ plugin: 'orquesta-minion', key: 'game' } as const, EMPTY)
+const game = atom({ plugin: 'dystopian-orchestra', key: 'game' } as const, EMPTY)
 
 type SectionId = 'violins' | 'drums' | 'conductors'
 

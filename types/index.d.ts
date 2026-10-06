@@ -15,6 +15,6 @@ export type Orchestra = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'orquesta-minion': { game: Orchestra }
+    'dystopian-orchestra': { game: Orchestra }
   }
 }

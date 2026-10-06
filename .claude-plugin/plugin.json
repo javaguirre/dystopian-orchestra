@@ -1,6 +1,6 @@
 {
-  "name": "orquesta-minion",
+  "name": "dystopian-orchestra",
   "version": "0.1.0",
-  "description": "Una orquesta de minions compone una nueva obra mientras Claude trabaja",
+  "description": "A wasteland orchestra composes a glitchy symphony while Claude works",
   "types": "./types/index.d.ts"
 }
