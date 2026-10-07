@@ -43,7 +43,6 @@ const CONDUCTOR: Sprite = [
 
 const VIOLIN: Sprite = ['kk......', 'kIIk....', '.kIiIk..', '..kIIIk.', '...kIIk.', '....kk..']
 const CELLO: Sprite = ['..kk..', '..kk..', '..kk..', '.kIIk.', 'kIIIIk', 'kIiiIk', '.kIIk.', 'kIIIIk', 'kIIIIk', 'kIiiIk', '.kIIk.', '..kk..', '..k...']
-const TRUMPET: Sprite = ['.......II', 'kIIIIIIII', '..kI.k.II', '.......II']
 const GUITAR: Sprite = ['.kIIk.', 'kIIIIk', 'kIkkIk', 'kIIIIk', '.kkkk.']
 const BARREL: Sprite = ['.kkkkkkkkkkkk.', 'kmMMMMMMMMMMmk', 'kkkkkkkkkkkkkk', 'kIIiiIIiiIIiik', 'kykkykkykkykkk', 'kIiiIIiiIIiiIk', 'kiiIIiiIIiiIIk', 'kkkkkkkkkkkkkk']
 const LID: Sprite = ['.k.', 'kIk', 'kIk', 'kIk', 'kIk', '.k.']
@@ -57,12 +56,28 @@ const CAN: Sprite = ['kk', 'II', 'Ii', 'kk']
 
 const puff = (x: number, y: number) => dots([[x, y], [x + 1, y - 1], [x + 2, y - 3]], 'w')
 
+const GUTTED_PIANO: Sprite = ['kkkkkkkkkkkkkk', 'kiIiiIiiiIiiik', 'kwkw.kwkk.wkwk', 'kww.wwwk.wwwwk', 'kkkkkkkkkkkkkk', '.k..........k.', '.k.........kk.']
+const BENT_TRUMPET: Sprite = ['.......II', 'kIIkIIIII', '..kI..kII', '......III']
+const TUB: Sprite = ['.kkkkkkk.', 'kIIIIIIIk', 'kIiiiiiIk', '.kiiiiik.']
+
 const MELODIC: Record<string, Instrument> = {
+  guttedPiano: (isPlaying, delay) =>
+    pixels(GUTTED_PIANO, -1, 11) + dots([[3, 12], [9, 12]], 'R') +
+    twoFrames(dots([[2, 10], [8, 10]], 's'), dots([[4, 10], [10, 10]], 's'), isPlaying, 0.3, delay),
+  washtubBass: (isPlaying, delay) =>
+    dots(Array.from({ length: 13 }, (_, i) => [-3, 1 + i] as Point), 'B') +
+    pixels(TUB, -6, 14) +
+    twoFrames(dots([[-2, 2], [-2, 6], [-1, 10], [-1, 13]], 'w') + dots([[0, 11]], 's'), dots([[-2, 2], [-1, 6], [0, 10], [-1, 13]], 'w') + dots([[1, 10]], 's'), isPlaying, 0.3, delay),
+  dentedSax: (isPlaying, delay) =>
+    dots([[7, 7], [7, 8], [8, 9], [8, 10], [9, 11], [8, 12], [8, 13], [7, 14], [6, 15]], 'i') +
+    dots([[5, 15], [4, 14], [3, 13], [3, 12], [4, 12], [2, 12]], 'I') +
+    dots([[8, 10], [9, 11]], 'w') + dots([[8, 12]], 'R') +
+    twoFrames('', puff(1, 10), isPlaying, 0.5, delay),
+  bentTrumpet: (isPlaying, delay) => pixels(BENT_TRUMPET, 8, 5) + dots([[11, 6]], 'w') + twoFrames('', puff(18, 5), isPlaying, 0.5, delay),
   violin: (isPlaying, delay) =>
     pixels(VIOLIN, -4, 8) + twoFrames(dots(diagonal(-5, 15, 9, 0.7), 'w'), dots(diagonal(-2, 15, 9, 0.7), 'w'), isPlaying, 0.5, delay),
   cello: (isPlaying, delay) =>
     pixels(CELLO, -4, 5) + twoFrames(dots(diagonal(-8, 12, 10, 0), 'w'), dots(diagonal(-5, 12, 10, 0), 'w'), isPlaying, 0.7, delay),
-  trumpet: (isPlaying, delay) => pixels(TRUMPET, 8, 5) + twoFrames('', puff(18, 5), isPlaying, 0.5, delay),
   accordion: (isPlaying, delay) =>
     twoFrames(pixels(Array(4).fill('kIIkxwxwxkIIk'), -1, 9), pixels(Array(4).fill('kIIkxwxkIIk'), 0, 9), isPlaying, 0.8, delay),
   guitar: (isPlaying, delay) =>
@@ -70,10 +85,6 @@ const MELODIC: Record<string, Instrument> = {
     twoFrames(dots([[0, 11]], 's'), dots([[0, 13]], 's'), isPlaying, 0.3, delay),
   flute: (isPlaying, delay) =>
     dots(diagonal(5, 7, 13, 0), 'I') + dots([[9, 7], [11, 7], [13, 7]], 'k') + twoFrames('', dots([[19, 5], [20, 4]], 'l'), isPlaying, 0.6, delay),
-  sax: (isPlaying, delay) =>
-    dots([[7, 7], [7, 8], [8, 9], [8, 10], [8, 11], [8, 12], [8, 13], [7, 14], [6, 15]], 'i') +
-    dots([[5, 15], [4, 14], [3, 13], [3, 12], [4, 12], [2, 12]], 'I') + dots([[8, 10], [8, 12]], 'k') +
-    twoFrames('', puff(1, 10), isPlaying, 0.5, delay),
   theremin: (isPlaying, delay) =>
     pixels(THEREMIN, 11, 11) + dots([[15, 10], [15, 9], [15, 8], [15, 7], [15, 6]], 'M') +
     twoFrames(dots([[13, 6]], 's') + dots([[14, 4], [16, 4]], 'x'), dots([[13, 8]], 's') + dots([[14, 6], [16, 6], [17, 5]], 'x'), isPlaying, 0.45, delay),
@@ -158,6 +169,9 @@ export const DYSTOPIAN: Cast = {
   accessories: ACCESSORIES,
   melodic: MELODIC,
   percussion: PERCUSSION,
-  conductor: { sprite: CONDUCTOR, extra: isPlaying => twoFrames(baton(true), baton(false), isPlaying, 0.9, 0) },
+  lineup: ['guttedPiano', 'washtubBass', 'dentedSax', 'bentTrumpet', 'guitar'],
+  conductors: [
+    { name: 'cyborg conductor', sprite: CONDUCTOR, extra: isPlaying => twoFrames(baton(true), baton(false), isPlaying, 0.9, 0), octave: 0 },
+  ],
   style,
 }

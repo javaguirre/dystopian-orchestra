@@ -33,6 +33,12 @@ const CROONER: Sprite = [
   'kwwwwwwwwwwk', 'kwwwwwwwwwwk', '.kmmmkkmmmk.', '.kmmk..kmmk.', '.kmmk..kmmk.', '.kkkk..kkkk.',
 ]
 
+const SINGER: Sprite = [
+  '..hhhhhhh...', '.hhhhhhhhh..', '.hhsssssshh.', '.hskssssksh.', '.hssssssssh.', '.hhssppsshh.',
+  '.hhhssssshh.', '..h.kssk.h..', '...kaaaak...', '..kaAaaAak..', '..kaaaaaak..', '...kaaaak...',
+  '..kaaaaaak..', '..kaAaaaak..', '.kaaaaaaaak.', '.kaaAaaaaak.', 'kaaaaaaaaaak', 'kkkkkkkkkkkk',
+]
+
 const microphone = (isUp: boolean) =>
   dots(Array.from({ length: 12 }, (_, i) => [14, 6 + i] as Point), 'M') +
   pixels(['kk', 'MM', 'kk'], 13, 3) +
@@ -163,6 +169,10 @@ export const JAZZ: Cast = {
   accessories: ACCESSORIES,
   melodic: MELODIC,
   percussion: PERCUSSION,
-  conductor: { sprite: CROONER, extra: isPlaying => twoFrames(microphone(true), microphone(false), isPlaying, 0.8, 0) },
+  lineup: ['piano', 'bass', 'sax', 'trumpet', 'archtop'],
+  conductors: [
+    { name: 'crooner', sprite: CROONER, extra: isPlaying => twoFrames(microphone(true), microphone(false), isPlaying, 0.8, 0), octave: 0 },
+    { name: 'lounge singer in an evening gown', sprite: SINGER, extra: isPlaying => twoFrames(microphone(true), microphone(false), isPlaying, 0.8, 0), octave: 1 },
+  ],
   style,
 }

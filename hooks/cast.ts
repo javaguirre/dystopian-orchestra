@@ -53,8 +53,11 @@ export const traitsOf = (role: Section, index: number, salt: number, theme: Them
   const rarity = roll < 0.05 ? 'legendary' : roll < 0.2 ? 'rare' : 'common'
   const style = cast.style(next, rarity)
 
+  const randomInstrument = pick(keys(role === 'melodic' ? cast.melodic : cast.percussion))
+  const lineupInstrument = role === 'melodic' ? cast.lineup[index] : undefined
+
   return {
-    instrument: pick(keys(role === 'melodic' ? cast.melodic : cast.percussion)),
+    instrument: lineupInstrument ?? randomInstrument,
     head: pick(keys(cast.heads)),
     body: pick(keys(cast.bodies)),
     accessory: next() < 0.35 ? 'none' : pick(keys(cast.accessories).slice(1)),
@@ -72,9 +75,21 @@ export const sprites = (theme: Theme) => {
   return (
     keys(cast.heads).map(name => `<g id="head-${name}">${pixels(cast.heads[name])}</g>`).join('') +
     keys(cast.bodies).map(name => `<g id="body-${name}">${pixels(cast.bodies[name], 0, 9)}</g>`).join('') +
-    `<g id="sp-conductor">${pixels(cast.conductor.sprite)}</g>`
+    cast.conductors.map((conductor, i) => `<g id="sp-conductor-${i}">${pixels(conductor.sprite)}</g>`).join('')
   )
 }
+
+const conductorIndex = (salt: number, theme: Theme) =>
+  Math.floor(generator(hash(salt, 4))() * CASTS[theme].conductors.length)
+
+export const conductorOf = (salt: number, theme: Theme) => CASTS[theme].conductors[conductorIndex(salt, theme)]
+
+const conductorStyle = (salt: number, theme: Theme) => CASTS[theme].style(generator(hash(salt, 5)), 'common')
+
+export const isDancerInGown = (index: number, salt: number) => generator(hash(salt, 6, index))() < 0.4
+
+const GOWN_SPIN_A: Sprite = ['...kaaaak...', '..kaAaaAak..', '..kaaaaaak..', '...kaaaak...', '..kaaaaaak..', '..kaAaaaak..', '.kaaaaaaaak.', 'kaaaAaaaaaak', 'kkkkkkkkkkkk']
+const GOWN_SPIN_B: Sprite = ['...kaaaak...', '..kaAaaAak..', '..kaaaaaak..', '...kaaaak...', '...kaaaaak..', '...kaaAaaak.', '..kaaaaaaaak', '.kaaaaAaaaak', '.kkkkkkkkkkk']
 
 const DANCE_ARMS_UP: Sprite = ['..kaaaaaak..', '.kaAaaaaAak.', '.kaaaaaaaak.', '..kaaaaaak..', '..kaaaaaak..', '.kaak..kaak.', '.kmk....kmk.', 'kmk......kmk', 'kk........kk']
 const DANCE_KICK: Sprite = ['..kaaaaaak..', '.kaAaaaaAak.', '.kaaaaaaaak.', '..kaaaaaak..', '..kaaaaaak..', '..kaaaaaak..', '..kmk.kmmk..', '..kmk..kk...', '..kk........']
@@ -89,8 +104,9 @@ const sway = (isPlaying: boolean, delay: number) =>
 
 const dancer = (index: number, salt: number, theme: Theme, isPlaying: boolean, delay: number) => {
   const traits = traitsOf('dancer', index, salt, theme)
-  const poseA = pixels(DANCE_ARMS_UP, 0, 9) + armsUp
-  const poseB = pixels(DANCE_KICK, 0, 9) + armsOut
+  const isInGown = isDancerInGown(index, salt)
+  const poseA = pixels(isInGown ? GOWN_SPIN_A : DANCE_ARMS_UP, 0, 9) + armsUp
+  const poseB = pixels(isInGown ? GOWN_SPIN_B : DANCE_KICK, 0, 9) + armsOut
 
   return (
     `<g style="${traits.style}"><g>${sway(isPlaying, delay)}` +
@@ -127,7 +143,7 @@ export const character = (
   const delay = (index % 4) * 0.15
   const art =
     role === 'conductor'
-      ? '<use href="#sp-conductor"/>' + CASTS[theme].conductor.extra(isPlaying)
+      ? `<g style="${conductorStyle(salt, theme)}"><use href="#sp-conductor-${conductorIndex(salt, theme)}"/>${conductorOf(salt, theme).extra(isPlaying)}</g>`
       : role === 'dancer'
         ? dancer(index, salt, theme, isPlaying, delay)
         : musician(role, index, salt, theme, isPlaying, delay)

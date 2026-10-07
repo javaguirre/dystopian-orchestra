@@ -1,6 +1,6 @@
 import type { Orchestra } from '../types'
 
-import { traitsOf } from './cast.ts'
+import { conductorOf, isDancerInGown, traitsOf } from './cast.ts'
 import { describeKey, keyOf, noteName, synthesize, toWav } from './music.ts'
 import type { Key } from './music.ts'
 import { stage } from './stage.ts'
@@ -72,6 +72,10 @@ const LABELS: Record<string, string> = {
   piano: 'electric piano',
   archtop: 'archtop guitar',
   kit: 'drum kit',
+  guttedPiano: 'gutted piano',
+  washtubBass: 'washtub bass',
+  dentedSax: 'taped-up saxophone',
+  bentTrumpet: 'bent trumpet',
   congas: 'congas',
   vibes: 'vibraphone',
   bongos: 'bongos',
@@ -99,11 +103,12 @@ const rosterRows = (o: Orchestra) => {
       return `| ${name} | ${look} | ${label(traits.instrument)} | ${RARITY[traits.rarity]} |`
     })
   const copy = THEMES[themeOf(o)]
-  const conductor = o.conductors > 0 ? [`| Leading | ${copy.conductor} ×${o.conductors} | ${copy.conductorTool} | common |`] : []
+  const conductor = o.conductors > 0 ? [`| Leading | ${conductorOf(o.salt, themeOf(o)).name} ×${o.conductors} | ${copy.conductorTool} | common |`] : []
 
   const dancers = Array.from({ length: o.dancers ?? 0 }, (_, index) => {
     const traits = traitsOf('dancer', index, o.salt, themeOf(o))
-    return `| Dancing | ${label(traits.head)} | — | ${RARITY[traits.rarity]} |`
+    const outfit = isDancerInGown(index, o.salt) ? 'long dress' : 'dance outfit'
+    return `| Dancing | ${label(traits.head)} · ${outfit} | — | ${RARITY[traits.rarity]} |`
   })
 
   return [...section('melodic', o.violins, 'Melodic'), ...section('percussion', o.drums, 'Percussion'), ...dancers, ...conductor]

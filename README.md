@@ -36,14 +36,15 @@ Every prompt you send makes the orchestra rehearse, every tool Claude calls writ
 ## The themes
 
 - **Dystopian orchestra:** a ruined city at night, searchlights, hazard tape and a cyborg conductor. The music uses dark scales and glitch effects.
-- **Jazz band:** a late-night club with a moonlit window, a bar, a cold spotlight, candlelit tables and drifting smoke, led by a crooner at a vintage microphone. The music swings, with jazz scales, a walking double bass, piano chords, vinyl crackle and a little room echo.
-- Dancers in the front row dance while the band plays, and add finger snaps (jazz) or claps and stomps (dystopian) on 2 and 4.
+- **Jazz band:** a late-night club with a moonlit window, a bar, a cold spotlight, candlelit tables and drifting smoke, fronted by a crooner or a lounge singer in an evening gown at a vintage microphone. The music swings, with jazz scales, a walking double bass, piano chords, vinyl crackle and a little room echo.
+- Both bands start from the same core: the first five melodic hires are piano, bass, sax, trumpet and guitar, then the rest are random. The dystopian band plays broken versions: a gutted piano, a washtub bass, a taped-up sax, a bent trumpet and a scrap guitar.
+- Dancers in the front row (some in long dresses) dance while the band plays, and add finger snaps (jazz) or claps and stomps (dystopian) on 2 and 4.
 
 ## The band
 
 Each orchestra has a hidden salt. Every musician's look and sound is derived from a hash of that salt, their section and their seat, so the band stays the same across reloads and changes with each new symphony.
 
-- Dystopian: 11 heads, 6 outfits, 7 accessories, 10 melodic instruments (violin, cello, trumpet, accordion, scrap guitar, flute, sax, theremin, musical saw, keytar) and 7 percussion ones (oil barrel, bin lids, buckets, pipe xylophone, tyre, manhole gong, cans).
+- Dystopian: 11 heads, 6 outfits, 7 accessories, 12 melodic instruments (gutted piano, washtub bass, taped-up sax, bent trumpet, scrap guitar, violin, cello, accordion, flute, theremin, musical saw, keytar) and 7 percussion ones (oil barrel, bin lids, buckets, pipe xylophone, tyre, manhole gong, cans).
 - Jazz: 6 heads (fedora, shades, beret, afro, pompadour, porkpie), 5 outfits (suit, vest, tuxedo, evening gown, zoot suit), 6 accessories, 7 melodic instruments (sax, trumpet, trombone, clarinet, double bass, electric piano, archtop guitar) and 5 percussion ones (drum kit, congas, vibraphone, bongos, ride with brushes).
 - Colours are generated per musician. Rare musicians get a neon (dystopian) or copper (jazz) instrument; legendary ones a golden instrument, glowing eyes and sparkles.
 - The hash also sets each musician's octave, detune and vibrato.

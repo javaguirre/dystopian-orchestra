@@ -1,6 +1,6 @@
 import type { Orchestra } from '../types'
 
-import { generator, traitsOf } from './cast.ts'
+import { conductorOf, generator, traitsOf } from './cast.ts'
 import type { Traits } from './cast.ts'
 import type { Theme } from './themes.ts'
 
@@ -216,6 +216,36 @@ const VOICES: Record<string, Voice> = {
     brightness: 0.4,
     tail: 0.05,
   },
+  guttedPiano: {
+    sound: (f, t) =>
+      0.16 *
+      [1, 1.018, 1.25].reduce((sum, ratio) => sum + Math.sin(TAU * f * ratio * t + 1.5 * Math.exp(-t * 6) * Math.sin(TAU * f * 3.1 * t)), 0) *
+      Math.exp(-t * 4) +
+      0.2 * noise() * Math.exp(-t * 80),
+    brightness: 0.7,
+    tail: 0.15,
+  },
+  washtubBass: {
+    sound: (f, t) => 0.8 * Math.sin(TAU * (f / 2) * t * (1 - 0.08 * Math.exp(-t * 8))) * Math.exp(-t * 6) + 0.1 * noise() * Math.exp(-t * 40),
+    brightness: 0.3,
+    tail: 0.1,
+    register: -1,
+  },
+  dentedSax: {
+    sound: (f, t, n, v) =>
+      0.3 * (square(f * t + 0.02 * v * Math.sin(TAU * 4 * t), 0.4) + 0.5 * saw(f * 1.01 * t) + 0.3 * noise()) *
+      (0.7 + 0.3 * Math.sin(TAU * 31 * t)) *
+      envelope(t, n, 0.04, 0.06),
+    brightness: 0.3,
+    tail: 0,
+  },
+  bentTrumpet: {
+    sound: (f, t, n) =>
+      0.3 * square(f * t * (1 + 0.025 * Math.sin(TAU * 3 * t)) * (1 - 0.06 * Math.exp(-t * 20)), 0.3) * envelope(t, n, 0.03, 0.05) +
+      0.06 * noise() * envelope(t, n, 0.01, 0.05),
+    brightness: 0.45,
+    tail: 0,
+  },
   synth: {
     sound: (f, t, n) =>
       0.45 * Math.sin(TAU * f * t + 2 * Math.exp(-t * 4) * Math.sin(TAU * 2 * f * t)) * envelope(t, n, 0.005, 0.05),
@@ -430,7 +460,7 @@ export const synthesize = (o: Orchestra, options: { limit?: number } = {}): Floa
   if ((o.dancers ?? 0) > 0) addInto(mix, renderClaps(piece, o.dancers, theme === 'jazz', length), 1)
 
   if (theme === 'jazz') {
-    const croon = { octave: 0, detune: 0, vibrato: 1.2 }
+    const croon = { octave: conductorOf(o.salt, theme).octave, detune: 0, vibrato: 1.2 }
     if (o.conductors > 0) addInto(mix, renderVoice(piece, VOICES.croon, 0, croon, length), 0.5)
     vinylAndRoom(mix)
     master(mix, 1.2)

@@ -14,7 +14,6 @@ export type ThemeCopy = {
   playing: string
   ovation: string
   movements: string[]
-  conductor: string
   conductorTool: string
   portraitAlt: string
 }
@@ -44,7 +43,6 @@ export const THEMES: Record<Theme, ThemeCopy> = {
     playing: '📻 The orchestra plays its piece among the ruins',
     ovation: '👏 Standing ovation!',
     movements: ['Allegro', 'Adagio', 'Scherzo', 'Finale'],
-    conductor: 'cyborg conductor',
     conductorTool: 'neon baton',
     portraitAlt: 'Ruined stage with the orchestra',
   },
@@ -58,14 +56,13 @@ export const THEMES: Record<Theme, ThemeCopy> = {
       dancers: { name: 'Swing dancer', effect: EFFECTS.dancers },
       violins: { name: 'Soloist', effect: EFFECTS.violins },
       drums: { name: 'Rhythm section player', effect: EFFECTS.drums },
-      conductors: { name: 'Crooning bandleader', effect: EFFECTS.conductors },
+      conductors: { name: 'Lead vocalist', effect: EFFECTS.conductors },
     },
     rehearsing: '🎷 The band warms up in the smoky club while Claude thinks…',
     idle: '🕯️ The club is quiet: send a prompt',
     playing: '🎷 The band swings through its tune',
     ovation: '👏 The club goes wild!',
     movements: ['Head', 'Solos', 'Trading fours', 'Out chorus'],
-    conductor: 'crooning bandleader',
     conductorTool: 'vintage microphone',
     portraitAlt: 'Smoky jazz club stage with the band',
   },

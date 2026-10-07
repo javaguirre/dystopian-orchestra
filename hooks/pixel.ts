@@ -72,7 +72,8 @@ export type Cast = {
   accessories: Record<string, { behind: string; front: string }>
   melodic: Record<string, Instrument>
   percussion: Record<string, Instrument>
-  conductor: { sprite: Sprite; extra: (isPlaying: boolean) => string }
+  lineup: string[]
+  conductors: { name: string; sprite: Sprite; extra: (isPlaying: boolean) => string; octave: number }[]
   style: (next: () => number, rarity: Rarity) => string
 }
 
