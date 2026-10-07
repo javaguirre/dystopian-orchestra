@@ -4,6 +4,8 @@ import { traitsOf } from './cast.ts'
 import { describeKey, keyOf, noteName, synthesize, toWav } from './music.ts'
 import type { Key } from './music.ts'
 import { stage } from './stage.ts'
+import { THEMES } from './themes.ts'
+import type { Theme } from './themes.ts'
 
 const MAX_ARCHIVED_NOTES = 128
 
@@ -48,11 +50,39 @@ const LABELS: Record<string, string> = {
   tire: 'tyre',
   gong: 'manhole gong',
   cans: 'cans',
+  fedora: 'fedora',
+  shades: 'shades',
+  beret: 'beret and goatee',
+  afro: 'afro',
+  pompadour: 'pompadour',
+  porkpie: 'porkpie hat',
+  suit: 'suit',
+  vest: 'vest and shirtsleeves',
+  tux: 'tuxedo',
+  gown: 'evening gown',
+  zoot: 'zoot suit',
+  flower: 'boutonniere',
+  pocketSquare: 'pocket square',
+  pearls: 'pearls',
+  watchChain: 'watch chain',
+  scarf: 'silk scarf',
+  trombone: 'trombone',
+  clarinet: 'clarinet',
+  bass: 'double bass',
+  piano: 'electric piano',
+  archtop: 'archtop guitar',
+  kit: 'drum kit',
+  congas: 'congas',
+  vibes: 'vibraphone',
+  bongos: 'bongos',
+  ride: 'ride cymbal and brushes',
 }
 
 const RARITY = { common: 'common', rare: 'rare', legendary: '**legendary**' }
 
 const label = (name: string) => LABELS[name] ?? name
+
+const themeOf = (o: Orchestra): Theme => o.theme ?? 'dystopian'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -64,13 +94,19 @@ const stamp = (date: Date) => ({
 const rosterRows = (o: Orchestra) => {
   const section = (role: 'melodic' | 'percussion', count: number, name: string) =>
     Array.from({ length: count }, (_, index) => {
-      const traits = traitsOf(role, index, o.salt)
+      const traits = traitsOf(role, index, o.salt, themeOf(o))
       const look = [traits.head, traits.body, traits.accessory].filter(part => part !== 'none').map(label).join(' · ')
       return `| ${name} | ${look} | ${label(traits.instrument)} | ${RARITY[traits.rarity]} |`
     })
-  const conductor = o.conductors > 0 ? [`| Conducting | cyborg conductor ×${o.conductors} | neon baton | common |`] : []
+  const copy = THEMES[themeOf(o)]
+  const conductor = o.conductors > 0 ? [`| Leading | ${copy.conductor} ×${o.conductors} | ${copy.conductorTool} | common |`] : []
 
-  return [...section('melodic', o.violins, 'Melodic'), ...section('percussion', o.drums, 'Percussion'), ...conductor]
+  const dancers = Array.from({ length: o.dancers ?? 0 }, (_, index) => {
+    const traits = traitsOf('dancer', index, o.salt, themeOf(o))
+    return `| Dancing | ${label(traits.head)} | — | ${RARITY[traits.rarity]} |`
+  })
+
+  return [...section('melodic', o.violins, 'Melodic'), ...section('percussion', o.drums, 'Percussion'), ...dancers, ...conductor]
 }
 
 const scoreRows = (score: number[], key: Key) =>
@@ -81,7 +117,7 @@ const scoreRows = (score: number[], key: Key) =>
 
 const markdown = (o: Orchestra, key: Key, when: { day: string; time: string }, name: string) =>
   [
-    `# Wasteland Symphony Nº ${o.ovations + 1}`,
+    `# ${THEMES[themeOf(o)].pieceTitle} Nº ${o.ovations + 1}`,
     '',
     `![The band that played it](${name}.svg)`,
     '',
@@ -110,8 +146,8 @@ const bandPortrait = (o: Orchestra) =>
 
 export const archiveFiles = (o: Orchestra, now: Date) => {
   const when = stamp(now)
-  const key = keyOf(o.salt)
-  const name = `wasteland-symphony-n${o.ovations + 1}-${when.day}`
+  const key = keyOf(o.salt, themeOf(o))
+  const name = `${THEMES[themeOf(o)].fileName}-n${o.ovations + 1}-${when.day}`
   const audio = toWav(synthesize({ ...o, score: o.fullScore }, { limit: MAX_ARCHIVED_NOTES }))
 
   return [

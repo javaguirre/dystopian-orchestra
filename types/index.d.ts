@@ -1,6 +1,7 @@
 export type Orchestra = {
   notes: number
   earned: number
+  dancers: number
   violins: number
   drums: number
   conductors: number
@@ -11,6 +12,8 @@ export type Orchestra = {
   isPlaying: boolean
   isPerforming: boolean
   salt: number
+  theme: 'dystopian' | 'jazz' | null
+  isConfirmingReset: boolean
 }
 
 declare module 'claude-code' {

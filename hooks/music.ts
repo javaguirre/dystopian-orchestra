@@ -2,38 +2,49 @@ import type { Orchestra } from '../types'
 
 import { generator, traitsOf } from './cast.ts'
 import type { Traits } from './cast.ts'
+import type { Theme } from './themes.ts'
 
 const RATE = 22050
 const TAU = Math.PI * 2
 
-const SCALES = [
-  [0, 3, 5, 7, 10, 12, 15, 17],
-  [0, 1, 3, 5, 7, 8, 10, 12],
-  [0, 2, 3, 5, 7, 8, 11, 12],
-  [0, 2, 4, 6, 8, 10, 12, 14],
-  [0, 3, 5, 6, 7, 10, 12, 15],
-  [0, 1, 4, 5, 7, 8, 10, 12],
-]
+const SCALES: Record<Theme, { steps: number[]; name: string }[]> = {
+  dystopian: [
+    { steps: [0, 3, 5, 7, 10, 12, 15, 17], name: 'minor pentatonic' },
+    { steps: [0, 1, 3, 5, 7, 8, 10, 12], name: 'Phrygian' },
+    { steps: [0, 2, 3, 5, 7, 8, 11, 12], name: 'harmonic minor' },
+    { steps: [0, 2, 4, 6, 8, 10, 12, 14], name: 'whole tone' },
+    { steps: [0, 3, 5, 6, 7, 10, 12, 15], name: 'blues' },
+    { steps: [0, 1, 4, 5, 7, 8, 10, 12], name: 'Phrygian dominant' },
+  ],
+  jazz: [
+    { steps: [0, 2, 3, 5, 7, 9, 10, 12], name: 'Dorian' },
+    { steps: [0, 2, 4, 5, 7, 9, 10, 12], name: 'Mixolydian' },
+    { steps: [0, 3, 5, 6, 7, 10, 12, 15], name: 'blues' },
+    { steps: [0, 2, 4, 5, 7, 9, 10, 11], name: 'bebop dominant' },
+    { steps: [0, 2, 4, 7, 9, 12, 14, 16], name: 'major pentatonic' },
+    { steps: [0, 2, 3, 5, 7, 8, 10, 12], name: 'natural minor' },
+  ],
+}
 
 const ROOTS = [110, 116.54, 123.47, 130.81, 146.83]
 
-const SCALE_NAMES = ['minor pentatonic', 'Phrygian', 'harmonic minor', 'whole tone', 'blues', 'Phrygian dominant']
 const ROOT_SEMITONES = [9, 10, 11, 0, 2]
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-export type Key = { scale: number; root: number; beat: number }
+export type Key = { theme: Theme; scale: number; root: number; beat: number }
 
-export const keyOf = (salt: number): Key => ({
-  scale: salt % SCALES.length,
+export const keyOf = (salt: number, theme: Theme): Key => ({
+  theme,
+  scale: salt % SCALES[theme].length,
   root: (salt >>> 3) % ROOTS.length,
-  beat: 0.16 + ((salt >>> 7) % 8) * 0.02,
+  beat: theme === 'jazz' ? 0.26 + ((salt >>> 7) % 6) * 0.02 : 0.16 + ((salt >>> 7) % 8) * 0.02,
 })
 
 export const noteName = (key: Key, degree: number) =>
-  NOTE_NAMES[(ROOT_SEMITONES[key.root] + SCALES[key.scale][degree]) % 12]
+  NOTE_NAMES[(ROOT_SEMITONES[key.root] + SCALES[key.theme][key.scale].steps[degree]) % 12]
 
 export const describeKey = (key: Key) =>
-  `${NOTE_NAMES[ROOT_SEMITONES[key.root]]} ${SCALE_NAMES[key.scale]} · ${Math.round(30 / key.beat)} bpm`
+  `${NOTE_NAMES[ROOT_SEMITONES[key.root]]} ${SCALES[key.theme][key.scale].name} · ${Math.round(30 / key.beat)} bpm`
 
 let next = Math.random
 
@@ -44,7 +55,7 @@ const noise = () => next() * 2 - 1
 const clampDegree = (degree: number) => Math.max(0, Math.min(7, degree))
 
 type Note = { start: number; length: number; degree: number }
-type Piece = { scale: number[]; root: number; beat: number; notes: Note[]; seconds: number }
+type Piece = { scale: number[]; root: number; beat: number; notes: Note[]; seconds: number; swing: number }
 
 const motif = (score: number[], limit: number) => {
   const source = score.length > 0 ? score.slice(-limit) : [2, 3, 4, 2]
@@ -57,8 +68,10 @@ const motif = (score: number[], limit: number) => {
   return notes.slice(0, Math.max(16, source.length))
 }
 
-const compose = (score: number[], limit: number, key?: Key): Piece => {
-  const beat = key ? key.beat : random(0.14, 0.3)
+const compose = (score: number[], limit: number, key: Key): Piece => {
+  const beat = key.beat
+  const swing = key.theme === 'jazz' ? 2 / 3 : 1 / 2
+  const splitChance = key.theme === 'jazz' ? 0.55 : 0.3
   const notes: Note[] = []
   let time = 0
 
@@ -68,21 +81,18 @@ const compose = (score: number[], limit: number, key?: Key): Piece => {
       time += beat
       continue
     }
-    if (roll < 0.4) {
-      notes.push({ start: time, length: beat / 2, degree })
-      notes.push({ start: time + beat / 2, length: beat / 2, degree: clampDegree(degree + choose([-1, 1, 2])) })
+    if (roll < 0.1 + splitChance) {
+      notes.push({ start: time, length: beat * swing, degree })
+      notes.push({ start: time + beat * swing, length: beat * (1 - swing), degree: clampDegree(degree + choose([-1, 1, 2])) })
       time += beat
       continue
     }
-    const length = roll < 0.5 ? beat * 1.5 : beat
+    const length = roll < 0.2 + splitChance ? beat * 1.5 : beat
     notes.push({ start: time, length, degree })
     time += length
   }
 
-  const scale = key ? SCALES[key.scale] : choose(SCALES)
-  const root = key ? ROOTS[key.root] : choose(ROOTS)
-
-  return { scale, root, beat, notes, seconds: time }
+  return { scale: SCALES[key.theme][key.scale].steps, root: ROOTS[key.root], beat, notes, seconds: time, swing }
 }
 
 const frequency = (piece: Piece, degree: number, octave: number) =>
@@ -94,7 +104,12 @@ const envelope = (t: number, length: number, attack: number, release: number) =>
 const saw = (phase: number) => 2 * (phase % 1) - 1
 const square = (phase: number, width = 0.5) => (phase % 1 < width ? 1 : -1)
 
-type Voice = { sound: (f: number, t: number, length: number, vibrato: number) => number; brightness: number; tail: number }
+type Voice = {
+  sound: (f: number, t: number, length: number, vibrato: number) => number
+  brightness: number
+  tail: number
+  register?: number
+}
 
 const VOICES: Record<string, Voice> = {
   violin: {
@@ -155,6 +170,52 @@ const VOICES: Record<string, Voice> = {
     brightness: 0.5,
     tail: 0,
   },
+  trombone: {
+    sound: (f, t, n) => 0.45 * saw((f / 2) * t * (1 - 0.03 * Math.exp(-t * 10))) * envelope(t, n, 0.07, 0.08),
+    brightness: 0.15,
+    tail: 0,
+  },
+  clarinet: {
+    sound: (f, t, n, v) => 0.3 * square(f * t + 0.006 * v * Math.sin(TAU * 5 * t)) * envelope(t, n, 0.05, 0.07),
+    brightness: 0.18,
+    tail: 0,
+  },
+  bass: {
+    sound: (f, t) => {
+      let sample = 0
+      for (let k = 1; k <= 4; k++) sample += (Math.sin(TAU * k * f * t) / k) * Math.exp(-t * (4 + 3 * k))
+      return 0.7 * sample
+    },
+    brightness: 0.5,
+    tail: 0.15,
+    register: -1,
+  },
+  piano: {
+    sound: (f, t) =>
+      0.18 *
+      [1, 1.25, 1.5].reduce((sum, ratio) => sum + Math.sin(TAU * f * ratio * t + 1.2 * Math.exp(-t * 3) * Math.sin(TAU * f * ratio * t)), 0) *
+      Math.exp(-t * 2.5),
+    brightness: 1,
+    tail: 0.3,
+  },
+  archtop: {
+    sound: (f, t) => {
+      let sample = 0
+      for (const ratio of [1, 1.5]) {
+        for (let k = 1; k <= 3; k++) sample += (Math.sin(TAU * k * f * ratio * t) / k) * Math.exp(-t * (4 + 2 * k))
+      }
+      return 0.3 * sample
+    },
+    brightness: 0.6,
+    tail: 0.3,
+  },
+  croon: {
+    sound: (f, t, n, v) =>
+      0.35 * (Math.sin(TAU * (f * t + 0.02 * v * Math.sin(TAU * 5.5 * t))) + 0.4 * Math.sin(TAU * 2 * f * t) + 0.15 * Math.sin(TAU * 3 * f * t)) *
+      envelope(t, n, 0.08, 0.1),
+    brightness: 0.4,
+    tail: 0.05,
+  },
   synth: {
     sound: (f, t, n) =>
       0.45 * Math.sin(TAU * f * t + 2 * Math.exp(-t * 4) * Math.sin(TAU * 2 * f * t)) * envelope(t, n, 0.005, 0.05),
@@ -179,7 +240,7 @@ const renderVoice = (piece: Piece, voice: Voice, part: number, traits: Pick<Trai
   const buffer = new Float32Array(length)
   for (const note of piece.notes) {
     const degree = part === 1 ? note.degree - 2 : note.degree
-    const f = frequency(piece, degree, (part === 2 ? 0 : 1) + traits.octave) * (1 + traits.detune)
+    const f = frequency(piece, degree, (part === 2 ? 0 : 1) + traits.octave + (voice.register ?? 0)) * (1 + traits.detune)
     const noteLength = note.length + voice.tail
     const start = Math.floor(note.start * RATE)
     for (let i = 0; i < noteLength * RATE && start + i < length; i++) {
@@ -217,6 +278,20 @@ const HITS: Record<string, { hit: Hit; onBeat: (step: number) => boolean; densit
     density: 0.02,
   },
   cans: { hit: t => 0.22 * noise() * Math.exp(-t * 40), onBeat: step => step % 2 === 1, density: 0.5 },
+  kit: {
+    hit: t => 0.18 * (0.5 * noise() + Math.sin(TAU * 5200 * t)) * Math.exp(-t * 9),
+    onBeat: step => step % 2 === 0 || step % 4 === 3,
+    density: 0.05,
+  },
+  congas: { hit: (t, f) => 0.5 * Math.sin(TAU * (f / 4) * t) * Math.exp(-t * 12), onBeat: step => step % 4 === 3, density: 0.25 },
+  vibes: {
+    hit: (t, f) =>
+      0.22 * Math.sin(TAU * f * t + 0.5 * Math.sin(TAU * 4 * f * t)) * Math.exp(-t * 2) * (0.8 + 0.2 * Math.sin(TAU * 6 * t)),
+    onBeat: step => step % 8 === 0,
+    density: 0.25,
+  },
+  bongos: { hit: t => 0.4 * (Math.sin(TAU * 420 * t) + 0.2 * noise()) * Math.exp(-t * 25), onBeat: step => step % 2 === 1, density: 0.35 },
+  ride: { hit: t => 0.12 * noise() * Math.exp(-t * 12), onBeat: step => step % 2 === 0, density: 0.3 },
   tire: {
     hit: t => 0.7 * (Math.sin(TAU * 60 * t) * Math.exp(-t * 20) + 0.5 * noise() * Math.exp(-t * 50)),
     onBeat: () => false,
@@ -233,8 +308,26 @@ const renderPercussion = (piece: Piece, name: string, length: number) => {
   for (let index = 0; index * step < piece.seconds; index++) {
     if (!onBeat(index) && !chance(density)) continue
     const f = frequency(piece, Math.floor(random(0, 8)), 2)
-    const start = Math.floor(index * step * RATE)
+    const time = index % 2 === 1 ? (index - 1) * step + piece.beat * piece.swing : index * step
+    const start = Math.floor(time * RATE)
     for (let i = 0; i < hitLength && start + i < length; i++) buffer[start + i] += hit(i / RATE, f)
+  }
+
+  return buffer
+}
+
+const renderClaps = (piece: Piece, dancers: number, isJazz: boolean, length: number) => {
+  const buffer = new Float32Array(length)
+  const hitLength = Math.floor(0.12 * RATE)
+  const gain = Math.min(0.5, 0.15 + 0.08 * dancers)
+
+  for (let beat = 1; beat * piece.beat < piece.seconds; beat += 2) {
+    const start = Math.floor(beat * piece.beat * RATE)
+    for (let i = 0; i < hitLength && start + i < length; i++) {
+      const t = i / RATE
+      const snap = isJazz ? noise() * Math.exp(-t * 90) : noise() * Math.exp(-t * 45) + 0.6 * Math.sin(TAU * 70 * t) * Math.exp(-t * 30)
+      buffer[start + i] += gain * snap
+    }
   }
 
   return buffer
@@ -295,6 +388,18 @@ const tapeStop = (mix: Float32Array, length: number) => {
   }
 }
 
+const vinylAndRoom = (mix: Float32Array) => {
+  for (let i = 0; i < mix.length; i++) {
+    if (chance(0.0006)) mix[i] += noise() * 0.15
+  }
+  const echo = mix.slice()
+  for (const seconds of [0.029, 0.037, 0.043]) {
+    const delay = Math.floor(seconds * RATE)
+    for (let i = delay; i < mix.length; i++) echo[i] += 0.28 * echo[i - delay]
+  }
+  for (let i = 0; i < mix.length; i++) mix[i] = 0.75 * mix[i] + 0.25 * echo[i] * 0.35
+}
+
 const master = (mix: Float32Array, drive: number) => {
   let peak = 0
   for (let i = 0; i < mix.length; i++) {
@@ -306,8 +411,9 @@ const master = (mix: Float32Array, drive: number) => {
 }
 
 export const synthesize = (o: Orchestra, options: { limit?: number } = {}): Float32Array => {
+  const theme = o.theme ?? 'dystopian'
   next = generator(o.salt)
-  const piece = compose(o.score, options.limit ?? 16, keyOf(o.salt))
+  const piece = compose(o.score, options.limit ?? 16, keyOf(o.salt, theme))
   const length = Math.floor((piece.seconds + 0.6) * RATE)
   const mix = new Float32Array(length)
   const melodic = Math.min(o.violins, 8)
@@ -315,14 +421,23 @@ export const synthesize = (o: Orchestra, options: { limit?: number } = {}): Floa
 
   if (melodic === 0) addInto(mix, renderVoice(piece, VOICES.synth, 0, { octave: 0, detune: 0, vibrato: 1 }, length), 0.6)
   for (let index = 0; index < melodic; index++) {
-    const traits = traitsOf('melodic', index, o.salt)
+    const traits = traitsOf('melodic', index, o.salt, theme)
     addInto(mix, renderVoice(piece, VOICES[traits.instrument], index % 3, traits, length), 0.7 / Math.sqrt(melodic))
   }
   for (let index = 0; index < percussion; index++) {
-    addInto(mix, renderPercussion(piece, traitsOf('percussion', index, o.salt).instrument, length), 0.6)
+    addInto(mix, renderPercussion(piece, traitsOf('percussion', index, o.salt, theme).instrument, length), 0.6)
   }
-  if (o.conductors > 0) addInto(mix, renderDrone(piece, length), 1)
+  if ((o.dancers ?? 0) > 0) addInto(mix, renderClaps(piece, o.dancers, theme === 'jazz', length), 1)
 
+  if (theme === 'jazz') {
+    const croon = { octave: 0, detune: 0, vibrato: 1.2 }
+    if (o.conductors > 0) addInto(mix, renderVoice(piece, VOICES.croon, 0, croon, length), 0.5)
+    vinylAndRoom(mix)
+    master(mix, 1.2)
+    return mix
+  }
+
+  if (o.conductors > 0) addInto(mix, renderDrone(piece, length), 1)
   const amount = Math.min(0.95, 0.35 + 0.1 * o.ovations + 0.25 * Math.min(o.conductors, 2))
   glitch(mix, piece, amount)
   master(mix, 1.5 + amount)
